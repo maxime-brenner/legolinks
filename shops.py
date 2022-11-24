@@ -20,12 +20,13 @@ shops_variable={
 
 }
 
-def lego_price_from_html(url):
+def lego_data_from_html(url):
 	req=requests.get(url, headers=header, allow_redirects=True)
 	soup=bs4.BeautifulSoup(req.text, 'html.parser')
 	price=soup.find('span', {"data-test":"product-price"}).getText().replace('Price','').replace(',','.').replace('€','')
 	name=soup.find("h1", {"data-test":"product-overview-name"}).find('span', {"class":"Markup__StyledMarkup-sc-nc8x20-0 dbPAWk"}).getText()
-	return {"name":name, "price": price}
+	nb_pieces=soup.find("div", {"data-test":"pieces-value"}).getText()
+	return {"name":name, "price": price, "nb_pieces": nb_pieces}
 	
 
 def lego_price_from_html_from_file(url):
