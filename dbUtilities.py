@@ -35,3 +35,14 @@ def read_datas(table, conn):
 	
 	results= conn.execute(sqlalchemy.select([table])).fetchall()
 	return results
+
+#Add column to a table
+def add_column(engine, table_name, column):
+    column_name = column.compile(dialect=engine.dialect)
+    column_type = column.type.compile(engine.dialect)
+    engine.execute('ALTER TABLE %s ADD COLUMN %s %s' % (table_name, column_name, column_type))
+
+#To view the columns name
+def view_columns_names(table):
+	columns = [m.key for m in table.__table__.columns]
+	print (columns)
