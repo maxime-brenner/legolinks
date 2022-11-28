@@ -1,6 +1,7 @@
-from shops import lego_data_from_html
+from shops import lego_data_from_html, amazon_price_from_html
 from dbUtilities import connect_to_db, add_column, read_datas, view_columns_names
 from models import ProductLego
+from test_shop_class import Lego
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy
 import requests
@@ -12,7 +13,7 @@ session=Session()
 
 query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name))
 
-#for p in session.query(ProductLego): print(p.collection)
+for p in session.query(ProductLego): print(p.productId, p.product_name)
 
 #add_column(connect_to_db()["engine"], "productLego", sqlalchemy.Column('product_name', sqlalchemy.String(100)))
 def up_db():
@@ -31,11 +32,10 @@ def up_db():
 
         print(l)
 
-res=lego_data_from_html("https://www.lego.com/fr-be/product/gru-stuart-and-otto-40420")
-
-print(res)
+lego=Lego()
 
 
 
+#print(lego.multiple_product_extraction("https://www.lego.com/fr-fr/themes/super-mario"))
 
-
+#print(lego.single_page_datas_extraction("https://www.lego.com/fr-fr/product/super-mario-64-question-mark-block-71395"))
