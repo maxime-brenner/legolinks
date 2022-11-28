@@ -1,6 +1,9 @@
 import os, requests, bs4, re
 from sqlalchemy.orm import sessionmaker, declarative_base
 from models import ProductLego
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from time import sleep
 
 
 
@@ -21,12 +24,25 @@ shops_variable={
 }
 
 def lego_data_from_html(url):
+	
+	#Connect to the page
 	req=requests.get(url, headers=header, allow_redirects=True)
 	soup=bs4.BeautifulSoup(req.text, 'html.parser')
-	price=soup.find('span', {"data-test":"product-price"}).getText().replace('Price','').replace(',','.').replace('€','')
+
+	#Extract datas
+	price=float(soup.find('span', {"data-test":"product-price"}).getText().replace('Price','').replace(',','.').replace('€',''))
+	
 	name=soup.find("h1", {"data-test":"product-overview-name"}).find('span', {"class":"Markup__StyledMarkup-sc-nc8x20-0 dbPAWk"}).getText()
 	nb_pieces=soup.find("div", {"data-test":"pieces-value"}).getText()
-	return {"name":name, "price": price, "nb_pieces": nb_pieces}
+
+	try:
+		sale=float(soup.find('span', {"data-test":"product-price-sale"}).getText().replace('Sale Price','').replace(',','.').replace('€',''))
+		reduction=((price-sale)/price)*100
+	except AttributeError:
+		sale=0
+		reduction=0
+
+	return {"name": name, "price": price, "sale": sale, "reduction":reduction,"nb_pieces": int(nb_pieces)}
 	
 
 def lego_price_from_html_from_file(url):
@@ -92,12 +108,44 @@ def amazon_price_from_html_from_file(url, header):
 
 		return "File already exists"
 
-def amazon_price_from_html(url, header):
+def amazon_price_from_html(url):
 	
-	req=requests.get(url, headers=header)
-	soup=bs4.BeautifulSoup(req.text, 'html.parser')
-	price=soup.find('span', {"class":"a-price-whole"}).getText()+'.'+soup.find('span', {"class":"a-price-fraction"}).getText()
-	print(price)
+	driver=webdriver.Chrome()
+	driver.get(url)
+	#req=requests.get(url, headers=header, allow_redirects=True)
+	#soup=bs4.BeautifulSoup(req.text, 'html.parser')
+
+	last_height = driver.execute_script("return document.body.scrollHeight")
+
+	while True:
+		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+		sleep(2)
+
+		new_height = driver.execute_script("return document.body.scrollHeight")
+		if new_height == last_height:
+			break
+		last_height = new_height
+
+	elements=driver.find_elements(By.CLASS_NAME, "style__overlay__2qYgu.ProductGridItem__overlay__1ncmn")
+	#print(req.status_code)
+
+	for e in elements:
+		print (e.get_attribute("href"))
+
+	
+	
+
+	#for el in elements:
+		#print(el)
+		#preurl=el.find('a', {"class":"style__overlay__2qYgu ProductGridItem__overlay__1ncmn"}, href=True)
+		#print(preurl)
+		#url="https://www.amazon.fr"+preurl["href"]
+		#id=int(re.search("(\d){5}", url)).group(0)
+		
+	
+	#price=soup.find('div', {"class":"a-price-whole"}).getText()+'.'+soup.find('span', {"class":"a-price-fraction"}).getText()
+	
 	#float_price=float((re.search('(\d+,\d+)', price.getText()).group(0)).replace(",", "."))
 
 		
