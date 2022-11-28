@@ -99,7 +99,6 @@ class Lego(Shop):
 
         #Prepare the page  
         soup=self.parser(url)
-        print(soup)
 
         #Extract datas
         price=float(soup.find('span', {"data-test":"product-price"}).getText().replace('Price','').replace(',','.').replace('€',''))

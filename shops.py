@@ -114,7 +114,9 @@ def amazon_price_from_html(url):
 	driver.get(url)
 	#req=requests.get(url, headers=header, allow_redirects=True)
 	#soup=bs4.BeautifulSoup(req.text, 'html.parser')
-
+	options=webdriver.ChromeOptions()
+	options.add_experimental_option("excludeSwitches", ["enable-logging"])
+	
 	last_height = driver.execute_script("return document.body.scrollHeight")
 
 	while True:
