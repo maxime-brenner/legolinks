@@ -11,3 +11,10 @@ class ProductLego(declarative_base()):
 	nb_pieces=Column(Integer)
 	theme=Column("theme", String(100))
 	collection=Column("collection", String(100))
+
+
+class Minifigs(declarative_base()):
+
+	__tablename__="minifigs"
+
+	

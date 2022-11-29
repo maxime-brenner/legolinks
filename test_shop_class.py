@@ -63,11 +63,12 @@ class Lego(Shop):
                 try:
                     new_product=session.query(ProductLego.productId).filter(ProductLego.productId == productId).scalar()
                     new_product is not None 
+                    res=self.single_page_datas_extraction(link)
                     print("Add new product {0} in db".format(productId,) )
 
                     try:
                         
-                        session.execute(insert(ProductLego).values({ProductLego.productId:productId, ProductLego.link_lego:link, ProductLego.product_name:name, ProductLego.theme:"LEGO Super Mario"}))
+                        session.execute(insert(ProductLego).values({ProductLego.productId:productId, ProductLego.link_lego:link, ProductLego.product_name:name, ProductLego.theme:res["theme"], ProductLego.nb_pieces:res["nb_pieces"]}))
                         session.commit()
                         
                         print ("{0} succesfully add to the db".format(productId,))
@@ -105,6 +106,7 @@ class Lego(Shop):
         
         name=soup.find("h1", {"data-test":"product-overview-name"}).find('span', {"class":"Markup__StyledMarkup-sc-nc8x20-0 dbPAWk"}).getText()
         nb_pieces=soup.find("div", {"data-test":"pieces-value"}).getText()
+        theme=soup.find("div", {"class":"ProductOverviewstyles__Container-sc-1a1az6h-2 dkHUOp"}).find("span", {"itemprop":"brand"}).getText()
 
         try:
             sale=float(soup.find('span', {"data-test":"product-price-sale"}).getText().replace('Sale Price','').replace(',','.').replace('€',''))
@@ -113,4 +115,4 @@ class Lego(Shop):
             sale=0
             reduction=0
 
-        return {"name": name, "price": price, "sale": sale, "reduction":reduction,"nb_pieces": int(nb_pieces)}
+        return {"name": name, "price": price, "sale": sale, "reduction":reduction,"nb_pieces": int(nb_pieces), "theme":theme}

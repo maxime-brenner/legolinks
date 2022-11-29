@@ -7,14 +7,16 @@ from sqlalchemy.orm import sessionmaker
 import sqlalchemy
 from sqlalchemy.sql.expression import func
 import requests
+import tweepy
+from twitterBot import set_api
 
+def show_all_datas():
+    Session=sessionmaker(bind=connect_to_db()["engine"])
+    session=Session()
 
-Session=sessionmaker(bind=connect_to_db()["engine"])
-session=Session()
+    query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name, ProductLego.theme))
 
-#query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name))
-
-#for p in session.query(ProductLego): print(p.productId, p.product_name)
+    for p in session.query(ProductLego): print(p.productId, p.product_name, p.theme)
 
 #add_column(connect_to_db()["engine"], "productLego", sqlalchemy.Column('product_name', sqlalchemy.String(100)))
 def up_db():
@@ -33,7 +35,7 @@ def up_db():
 
         print(l)
 
-lego=Lego()
+
 
 
 
@@ -43,9 +45,26 @@ lego=Lego()
 
 #amazon_price_from_html("https://www.amazon.fr/stores/page/1B219DA7-55D7-4F81-8901-6D08B96D2A1F?channel=hp-r4-ss-starwars-q4")
 
-random_product=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name).filter(ProductLego.productId < 100000).order_by(func.random()).limit(1)).first()
-res=lego.single_page_datas_extraction(random_product[1])
-trackedl=Webgain("1639880", "268085").create_aff_link(random_product[1])
-print("Le jouet LEGO {0} avec {1} pièces est disponible dans la boutique LEGO pour {2}€ \nProfitez-en maintenant\n{3}".format(res["name"], res["nb_pieces"], res["price"], trackedl))
+
 
 #for p in random_product: print(p)
+
+def post_random_product():
+    #Set the api to create status
+    api=set_api()
+
+    #Randomly choose a product, update datas and set the tracked link
+    lego=Lego()
+    random_product=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name).filter(ProductLego.productId < 100000).order_by(func.random()).limit(1)).first()
+    res=lego.single_page_datas_extraction(random_product[1])
+    trackedl=Webgain("1639880", "268085").create_aff_link(random_product[1])
+
+    if res["sale"] != 0:
+        msg="Le jouet {theme} {name} avec {nb_pieces} pièces est en promo dans la boutique LEGO pour {price}€ soit unr réduction de {reduction:.2f}%\nProfitez-en maintenant\n{trackedl}".format(theme=res["theme"],name=res["name"], nb_pieces=res["nb_pieces"], price=res["price"], reduction=res["reduction"], trackedl=trackedl)
+    else:
+        msg="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique LEGO pour {price}€ \nProfitez-en maintenant\n{trackedl}".format(theme=res["theme"],name=res["name"], nb_pieces=res["nb_pieces"], price=res["price"], trackedl=trackedl)
+    #Post message
+    #api.update_status(msg)
+    print(msg, res)
+
+Lego().multiple_product_extraction("https://www.lego.com/fr-be/themes/city")
