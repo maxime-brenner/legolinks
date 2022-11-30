@@ -55,6 +55,7 @@ def post_random_product():
 
     #Randomly choose a product, update datas and set the tracked link
     lego=Lego()
+    session=lego.create_session()
     random_product=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name).filter(ProductLego.productId < 100000).order_by(func.random()).limit(1)).first()
     res=lego.single_page_datas_extraction(random_product[1])
     trackedl=Webgain("1639880", "268085").create_aff_link(random_product[1])
@@ -64,7 +65,22 @@ def post_random_product():
     else:
         msg="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique LEGO pour {price}€ \nProfitez-en maintenant\n{trackedl}".format(theme=res["theme"],name=res["name"], nb_pieces=res["nb_pieces"], price=res["price"], trackedl=trackedl)
     #Post message
-    #api.update_status(msg)
+    api.update_status(msg)
     print(msg, res)
 
-Lego().multiple_product_extraction("https://www.lego.com/fr-be/themes/city")
+session=Lego().create_session()
+api=set_api()
+
+marvel=session.execute(sqlalchemy.select(ProductLego.productId,  ProductLego.product_name, ProductLego.link_lego, ProductLego.theme).filter(ProductLego.theme=="Marvel"))
+
+original_message="Une sélection de 6 jouets LEGO Marvel pour fêter la sortie de Black Panther: Wakanda Forever !\nDéroulez le thread pour continuer\n👇👇👇"
+product_message="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique LEGO pour {price}€ \nProfitez-en maintenant\n{trackedl}"
+
+original_status=api.update_status(original_message)
+
+for p in marvel: 
+    res=Lego().single_page_datas_extraction(p.link_lego)
+    trackedl=Webgain("1639880", "268085").create_aff_link(p.link_lego)
+    new_product=api.update_status(status=product_message.format(theme=p.theme, name=p.product_name, nb_pieces=res["nb_pieces"], price=res["price"], trackedl=trackedl), in_reply_to_status_id=original_status.id, )
+
+ 

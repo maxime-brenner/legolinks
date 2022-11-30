@@ -13,8 +13,7 @@ class ProductLego(declarative_base()):
 	collection=Column("collection", String(100))
 
 
-class Minifigs(declarative_base()):
+#class Minifigs(declarative_base()):
 
-	__tablename__="minifigs"
+	#__tablename__="minifigs"
 
-	
