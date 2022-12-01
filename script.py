@@ -1,7 +1,7 @@
 from shops import lego_data_from_html, amazon_price_from_html
 from dbUtilities import connect_to_db, add_column, read_datas, view_columns_names
 from models import ProductLego
-from test_shop_class import Lego
+from test_shop_class import Lego, Amazon
 from regie import Webgain
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy
@@ -14,9 +14,9 @@ def show_all_datas():
     Session=sessionmaker(bind=connect_to_db()["engine"])
     session=Session()
 
-    query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.product_name, ProductLego.theme))
+    query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.link_amazon, ProductLego.product_name, ProductLego.theme))
 
-    for p in session.query(ProductLego): print(p.productId, p.product_name, p.theme)
+    for p in session.query(ProductLego): print(p.productId, p.product_name, p.theme, p.link_lego, p.link_amazon)
 
 #add_column(connect_to_db()["engine"], "productLego", sqlalchemy.Column('product_name', sqlalchemy.String(100)))
 def up_db():
@@ -68,19 +68,60 @@ def post_random_product():
     api.update_status(msg)
     print(msg, res)
 
-session=Lego().create_session()
-api=set_api()
 
-marvel=session.execute(sqlalchemy.select(ProductLego.productId,  ProductLego.product_name, ProductLego.link_lego, ProductLego.theme).filter(ProductLego.theme=="Marvel"))
+def post_thread():
+    api=set_api()
 
-original_message="Une sélection de 6 jouets LEGO Marvel pour fêter la sortie de Black Panther: Wakanda Forever !\nDéroulez le thread pour continuer\n👇👇👇"
-product_message="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique LEGO pour {price}€ \nProfitez-en maintenant\n{trackedl}"
+    marvel=session.execute(sqlalchemy.select(ProductLego.productId,  ProductLego.product_name, ProductLego.link_lego, ProductLego.theme).filter(ProductLego.theme=="Marvel"))
 
-original_status=api.update_status(original_message)
+    original_message="Une sélection de 6 jouets LEGO Marvel pour fêter la sortie de Black Panther: Wakanda Forever !\nDéroulez le thread pour continuer\n👇👇👇"
+    product_message="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique LEGO pour {price}€ \nProfitez-en maintenant\n{trackedl}"
 
-for p in marvel: 
-    res=Lego().single_page_datas_extraction(p.link_lego)
-    trackedl=Webgain("1639880", "268085").create_aff_link(p.link_lego)
-    new_product=api.update_status(status=product_message.format(theme=p.theme, name=p.product_name, nb_pieces=res["nb_pieces"], price=res["price"], trackedl=trackedl), in_reply_to_status_id=original_status.id, )
+    original_status=api.update_status(original_message)
+
+    for p in marvel: 
+        res=Lego().single_page_datas_extraction(p.link_lego)
+        trackedl=Webgain("1639880", "268085").create_aff_link(p.link_lego)
+        new_product=api.update_status(status=product_message.format(theme=p.theme, name=p.product_name, nb_pieces=res["nb_pieces"], price=res["price"], trackedl=trackedl), in_reply_to_status_id=original_status.id, )
 
  
+def post_product_from_link(msg, link):
+
+    api=set_api()
+
+    trackedl=Webgain("1639880", "268085").create_aff_link(link)
+
+    to_post=msg.format(trackedl=trackedl)
+
+    api.update_status(to_post)
+
+#Amazon().amazon_price_from_html("https://www.amazon.fr/stores/page/2686D5FE-3511-4FBB-A7CD-D3ACC396BD11?channel=hp-r1-rs-deals-q4")
+
+
+show_all_datas()
+
+def add_lego():
+    session=Lego().create_session()
+    none=session.query(ProductLego.productId).filter(ProductLego.link_lego==None)
+    for n in none: 
+
+        print(n.productId)
+
+        try:
+            link="https://www.lego.com/fr-be/product/{id}".format(id=n.productId)
+            res=Lego().single_page_datas_extraction(link)
+
+            try: 
+                n.product_name=res["name"]
+                n.link_lego=link
+                n.nb_pieces=res["nb_pieces"]
+                n.theme=res["theme"]
+
+                Lego().create_session.commit()
+            except Exception as e:
+                print(e)
+
+        except:
+            pass
+
+add_lego()

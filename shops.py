@@ -133,7 +133,17 @@ def amazon_price_from_html(url):
 	#print(req.status_code)
 
 	for e in elements:
-		print (e.get_attribute("href"))
+		link=e.get_attribute("href")
+		
+
+		try:
+			id=re.search("\d{5}", link).group(0)
+		except Exception as e:
+			print(e)
+			pass
+
+		print(id)
+		
 
 	
 	

@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 from sqlalchemy import create_engine, MetaData, insert
 from sqlalchemy.orm import sessionmaker
 from models import ProductLego
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from time import sleep
 
 
 class Shop():
@@ -20,7 +23,7 @@ class Shop():
         #Connect to the page
         req=requests.get(url, headers=self.header, allow_redirects=True)
         soup=BeautifulSoup(req.text, 'html.parser')
-        print(req.status_code)
+        print(req.status_code, req.url)
 
         return soup
     
@@ -108,6 +111,7 @@ class Lego(Shop):
         nb_pieces=soup.find("div", {"data-test":"pieces-value"}).getText()
         theme=soup.find("div", {"class":"ProductOverviewstyles__Container-sc-1a1az6h-2 dkHUOp"}).find("span", {"itemprop":"brand"}).getText()
 
+        #Check if sales are available
         try:
             sale=float(soup.find('span', {"data-test":"product-price-sale"}).getText().replace('Sale Price','').replace(',','.').replace('€',''))
             reduction=((price-sale)/price)*100
@@ -116,3 +120,67 @@ class Lego(Shop):
             reduction=0
 
         return {"name": name, "price": price, "sale": sale, "reduction":reduction,"nb_pieces": int(nb_pieces), "theme":theme}
+
+class Amazon(Shop):
+
+    def amazon_price_from_html(self, url):
+	
+        driver=webdriver.Chrome()
+        driver.get(url)
+        #req=requests.get(url, headers=header, allow_redirects=True)
+        #soup=bs4.BeautifulSoup(req.text, 'html.parser')
+        options=webdriver.ChromeOptions()
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        
+        last_height = driver.execute_script("return document.body.scrollHeight")
+
+        while True:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+            sleep(3)
+
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+
+        elements=driver.find_elements(By.CLASS_NAME, "style__overlay__2qYgu.ProductGridItem__overlay__1ncmn")
+        
+
+        for e in elements:
+            link=e.get_attribute("href")
+            
+
+            try:
+                id=int(re.search("\d{5}", link).group(0))
+                session=self.create_session()
+                to_check=session.query(ProductLego).filter(ProductLego.productId==id).first()
+
+    
+                if to_check is None:
+                    print("This article is not in the database: {id}".format(id=id,))
+
+                    try:
+                        newlego=ProductLego(productId=id, link_amazon=link)
+                        session.add(newlego)
+                        session.commit()
+                    except Exception as e:
+                        print("Erreur lors de la mise à jour de l'article {id}: {e}".format(id=id, e=e,))
+
+                else:
+                    print("Article already in the database :{id}".format(id=id,))
+
+                    try:
+                        to_check.link_amazon=link
+                        session.commit()
+                    except Exception as e:
+                        print("Erreur lors de l'ajout de l'article {id}: {e}".format(id=id, e=e,))
+                    
+
+            except Exception as e:
+                print("Erreur :{e}".format(e=e))
+                pass
+
+           
+		
+
