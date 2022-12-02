@@ -8,7 +8,7 @@ import sqlalchemy
 from sqlalchemy.sql.expression import func
 import requests
 import tweepy
-from twitterBot import set_api
+#from twitterBot import set_api
 
 def show_all_datas():
     Session=sessionmaker(bind=connect_to_db()["engine"])
@@ -98,8 +98,6 @@ def post_product_from_link(msg, link):
 #Amazon().amazon_price_from_html("https://www.amazon.fr/stores/page/2686D5FE-3511-4FBB-A7CD-D3ACC396BD11?channel=hp-r1-rs-deals-q4")
 
 
-show_all_datas()
-
 def add_lego():
     session=Lego().create_session()
     none=session.query(ProductLego.productId).filter(ProductLego.link_lego==None)
@@ -124,4 +122,4 @@ def add_lego():
         except:
             pass
 
-add_lego()
+Amazon().single_page_extraction("https://www.amazon.fr/L%C3%A9vasion-Triceratops-Construction-10939-Multicolore/dp/B08GPHG4WF?ref_=ast_sto_dp&th=1&psc=1")
