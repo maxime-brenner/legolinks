@@ -99,7 +99,7 @@ class Lego(Shop):
 
 
     #Extract datas from a product page 
-    def single_page_datas_extraction(self, url):
+    def multiple_product_extraction(self, url):
 
         #Prepare the page  
         soup=self.parser(url)
@@ -123,14 +123,16 @@ class Lego(Shop):
 
 class Amazon(Shop):
 
+    #Open a browser via Selenium, load all the page and extract datas
     def amazon_price_from_html(self, url):
-	
+
+        #Open a browser via Selenium
         driver=webdriver.Chrome()
         driver.get(url)
-        #req=requests.get(url, headers=header, allow_redirects=True)
-        #soup=bs4.BeautifulSoup(req.text, 'html.parser')
         options=webdriver.ChromeOptions()
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
+
+        #Scroll the page for loading all the elements
         
         last_height = driver.execute_script("return document.body.scrollHeight")
 
@@ -144,19 +146,20 @@ class Amazon(Shop):
                 break
             last_height = new_height
 
+        #Search for the links of the products
         elements=driver.find_elements(By.CLASS_NAME, "style__overlay__2qYgu.ProductGridItem__overlay__1ncmn")
         
-
+        
         for e in elements:
             link=e.get_attribute("href")
             
-
+            #Extract the id of the product
             try:
                 id=int(re.search("\d{5}", link).group(0))
                 session=self.create_session()
                 to_check=session.query(ProductLego).filter(ProductLego.productId==id).first()
 
-    
+                #If not in the database, put the product in it
                 if to_check is None:
                     print("This article is not in the database: {id}".format(id=id,))
 
@@ -167,6 +170,7 @@ class Amazon(Shop):
                     except Exception as e:
                         print("Erreur lors de la mise à jour de l'article {id}: {e}".format(id=id, e=e,))
 
+                #If known, add the amazon link
                 else:
                     print("Article already in the database :{id}".format(id=id,))
 
@@ -181,6 +185,34 @@ class Amazon(Shop):
                 print("Erreur :{e}".format(e=e))
                 pass
 
-           
+    #Extract datas from a single page
+    def single_page_extraction(self, url):
+
+        #Initiate session
+        session=self.create_session()
+
+        #Prepare the page  
+        soup=self.parser(url)
+
+        #Extract price
+        left=soup.find('span', {"class":"a-price-whole"}).getText().replace(",","")
+        fraction=soup.find('span', {"class":"a-price-fraction"}).getText()
+
+        price="{left}.{fraction}".format(left=left, fraction=fraction)	
+        price=float(price)
+        #float_price=float((re.search('(\d+,\d+)', price.getText()).group(0)).replace(",", "."))
+
+        try:
+            ancient=soup.find('span', {"class":"a-price a-text-price"}).find('span', {"class":"a-offscreen"}).getText().replace(",",".").replace("€","")
+            ancient=float(ancient)
+            sale="%.2f" % ((ancient-price)/ancient)
+        except:
+            ancient=None
+            sale=None
+            pass
+
+        print(price, ancient, sale)
+
+
 		
 
