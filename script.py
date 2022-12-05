@@ -1,6 +1,6 @@
 from shops import lego_data_from_html, amazon_price_from_html
 from dbUtilities import connect_to_db, add_column, read_datas, view_columns_names
-from models import ProductLego
+from models import ProductLego, Minifigs, Association
 from test_shop_class import Lego, Amazon
 from regie import Webgain
 from sqlalchemy.orm import sessionmaker
@@ -122,4 +122,11 @@ def add_lego():
         except:
             pass
 
-Amazon().single_page_extraction("https://www.amazon.fr/L%C3%A9vasion-Triceratops-Construction-10939-Multicolore/dp/B08GPHG4WF?ref_=ast_sto_dp&th=1&psc=1")
+session=Lego().create_session()
+session.execute("ALTER TABLE association_table DROP COLUMN productlego_id")
+session.commit()
+#sqlalchemy.Table('association_table', sqlalchemy.MetaData(), sqlalchemy.Column("minifigs_id", sqlalchemy.ForeignKey("minifigs.minifigId"), primary_key=True))
+#print(connect_to_db()["metadata"].tables.keys())
+#new=Minifigs(minifig_name="Abraham Lincoln", minifig_url="https://lego.fandom.com/fr/wiki/Abraham_Lincoln")
+#session.add(new)
+#session.commit()

@@ -1,4 +1,6 @@
 import sqlalchemy, re
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column, Integer, String, ForeignKey
 
 #Connect to sqlite db
 def connect_to_db():
@@ -46,3 +48,13 @@ def add_column(engine, table_name, column):
 def view_columns_names(table):
 	columns = [m.key for m in table.__table__.columns]
 	print (columns)
+
+meta=sqlalchemy.MetaData()
+sqlalchemy.Table('association_table', meta,
+	Column("productlego_id", ForeignKey("productLego.productId"), primary_key=True),
+	Column("minifigs_id",ForeignKey("minifigs.minifigId"), primary_key=True),
+	Column("extra_data",String(50))
+	
+)
+
+meta.create_all(connect_to_db()["engine"])
