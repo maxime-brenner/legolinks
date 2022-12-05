@@ -16,7 +16,7 @@ class Shop():
             'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'fr-FR,fr-FR;q=0.9,en;q=0.8'
             }
-        self.domain="https://www.lego.com{0}"
+        
 
     #Get a page from a url and parse it
     def parser(self, url):
@@ -42,6 +42,9 @@ class Shop():
         return session
 
 class Lego(Shop):
+    def __init__(self):
+        super().__init__()
+        self.domain=self.domain="https://www.lego.com{0}"
 
     #Get every products on a multi-products page and check if it's in the database.
     #Otherwise, add the product in the database
@@ -123,8 +126,12 @@ class Lego(Shop):
 
 class Amazon(Shop):
 
+    def __init__(self):
+        super().__init__()
+        self.domain="https://www.amazon.fr"
+
     #Open a browser via Selenium, load all the page and extract datas
-    def amazon_price_from_html(self, url):
+    def multiple_product_extraction(self, url):
 
         #Open a browser via Selenium
         driver=webdriver.Chrome()

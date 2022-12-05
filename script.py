@@ -1,6 +1,6 @@
 from shops import lego_data_from_html, amazon_price_from_html
 from dbUtilities import connect_to_db, add_column, read_datas, view_columns_names
-from models import ProductLego
+from models import ProductLego, Minifigs
 from test_shop_class import Lego, Amazon
 from regie import Webgain, AmazonPartner
 from sqlalchemy.orm import sessionmaker
@@ -122,12 +122,15 @@ def add_lego():
         except:
             pass
 
-session=Amazon().create_session()
+session=Lego().create_session()
+#new=Minifigs(minifig_name="Abraham Lincoln", minifig_url="https://lego.fandom.com/fr/wiki/Abraham_Lincoln")
+#session.add(new)
+#session.commit()
+print(Minifigs.__tablename__)
+for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url)
 
-amz=session.query(ProductLego.link_amazon, ProductLego.link_lego).filter(ProductLego.link_amazon!=None, ProductLego.link_lego!=None).first()
-print(amz[0], amz[1])
-pricea=Lego().single_page_datas_extraction(amz[1])["price"]
-priceb=Amazon().single_page_datas_extraction(amz[0])["price"]
 
 
-print(f"Prix Amazon = {priceb}\nPrix Boutique Lego = {pricea}")
+#add_column(connect_to_db()["engine"], "minifigs", sqlalchemy.Column("productLego_set", sqlalchemy.ForeignKey("productLego.productId"), primary_key=True))
+
+post_random_product()
