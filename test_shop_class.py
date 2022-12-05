@@ -99,7 +99,7 @@ class Lego(Shop):
 
 
     #Extract datas from a product page 
-    def multiple_product_extraction(self, url):
+    def single_page_datas_extraction(self, url):
 
         #Prepare the page  
         soup=self.parser(url)
@@ -186,7 +186,7 @@ class Amazon(Shop):
                 pass
 
     #Extract datas from a single page
-    def single_page_extraction(self, url):
+    def single_page_datas_extraction(self, url):
 
         #Initiate session
         session=self.create_session()
@@ -211,7 +211,7 @@ class Amazon(Shop):
             sale=None
             pass
 
-        print(price, ancient, sale)
+        return {"price": price, "ancient":ancient, "sale":sale}
 
 
 		

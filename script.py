@@ -2,13 +2,13 @@ from shops import lego_data_from_html, amazon_price_from_html
 from dbUtilities import connect_to_db, add_column, read_datas, view_columns_names
 from models import ProductLego
 from test_shop_class import Lego, Amazon
-from regie import Webgain
+from regie import Webgain, AmazonPartner
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy
 from sqlalchemy.sql.expression import func
 import requests
 import tweepy
-#from twitterBot import set_api
+from twitterBot import set_api
 
 def show_all_datas():
     Session=sessionmaker(bind=connect_to_db()["engine"])
@@ -122,4 +122,12 @@ def add_lego():
         except:
             pass
 
-Amazon().single_page_extraction("https://www.amazon.fr/L%C3%A9vasion-Triceratops-Construction-10939-Multicolore/dp/B08GPHG4WF?ref_=ast_sto_dp&th=1&psc=1")
+session=Amazon().create_session()
+
+amz=session.query(ProductLego.link_amazon, ProductLego.link_lego).filter(ProductLego.link_amazon!=None, ProductLego.link_lego!=None).first()
+print(amz[0], amz[1])
+pricea=Lego().single_page_datas_extraction(amz[1])["price"]
+priceb=Amazon().single_page_datas_extraction(amz[0])["price"]
+
+
+print(f"Prix Amazon = {priceb}\nPrix Boutique Lego = {pricea}")
