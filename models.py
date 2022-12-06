@@ -1,18 +1,9 @@
 from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, MetaData
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, MetaData, schema
 from dbUtilities import connect_to_db
 
 Base=declarative_base()
-
-#class Association(Base):
-
-	#__tablename__="association_table"
-
-	#productlego_id= Column(ForeignKey("ProductLego.productId"), primary_key=True)
-	#minifigs_id= Column(ForeignKey("minifigs.minifigId"), primary_key=True)
-	#extra_data=Column(String(50))
-	#minifigs=relationship("Minifigs", back_populates="productlego")
-	#productlego=relationship("ProductLego", back_populates="minifigs")
+metadata=MetaData()
 
 class ProductLego(Base):
 
@@ -25,9 +16,7 @@ class ProductLego(Base):
 	nb_pieces=Column(Integer)
 	theme=Column("theme", String(100))
 	collection=Column("collection", String(100))
-	#minifigs=relationship("Association", back_populates="productlego")
-
-
+	
 class Minifigs(Base):
 
 	__tablename__="minifigs"
@@ -35,12 +24,18 @@ class Minifigs(Base):
 	minifigId = Column(Integer, primary_key=True)
 	minifig_name = Column(String(100))
 	minifig_url = Column(String(255))
-	#productlego=relationship("Association", back_populates="minifigs")
+	productlego_set=Column(ForeignKey(ProductLego.productId), primary_key=True)
+
+#class Association(Base):
+
+	#__tablename__="association_table"
+
+	#productLego_id= Column(ForeignKey(ProductLego.productId), primary_key=True)
+	#minifigs_id= Column(ForeignKey(Minifigs.minifigId), primary_key=True)
+	#extra_datas=Column(String(50))
+	#minifigs=relationship("Minifigs", back_populates="productlego")
+	#productlego=relationship("ProductLego", back_populates="minifigs")
+
+#Association.__table__.drop(connect_to_db()["engine"])
 
 
-meta=MetaData()
-newtab=Table("minifigs", meta,
-			Column("productLego_set", ForeignKey("productLego.productId")),
-)
-
-meta.create_all(connect_to_db()["engine"])

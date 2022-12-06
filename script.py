@@ -126,11 +126,17 @@ session=Lego().create_session()
 #new=Minifigs(minifig_name="Abraham Lincoln", minifig_url="https://lego.fandom.com/fr/wiki/Abraham_Lincoln")
 #session.add(new)
 #session.commit()
-print(Minifigs.__tablename__)
-for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url)
+#print(Minifigs.__tablename__)
+#new=Minifigs(minifig_name="Nick Quasi-Sans-Tête", minifig_url="https://lego.fandom.com/fr/wiki/Nick_Quasi-Sans-T%C3%AAte", productlego=[76389])
+#session.add(new)
+#session.commit()
+#for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url)
+
+#show_all_datas()
+
+#add_column(connect_to_db()["engine"], "minifigs", sqlalchemy.Column("productlego_set", sqlalchemy.ForeignKey(ProductLego.productId), primary_key=True))
+
+#post_random_product()
 
 
-
-#add_column(connect_to_db()["engine"], "minifigs", sqlalchemy.Column("productLego_set", sqlalchemy.ForeignKey("productLego.productId"), primary_key=True))
-
-post_random_product()
+session.execute("ALTER TABLE minifigs ADD CONSTRAINT FOREIGN KEY (productlego_set) REFERENCES productLego(productId);")
