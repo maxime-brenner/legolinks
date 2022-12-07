@@ -72,14 +72,14 @@ def post_random_product():
 def post_thread():
     api=set_api()
 
-    marvel=session.execute(sqlalchemy.select(ProductLego.productId,  ProductLego.product_name, ProductLego.link_lego, ProductLego.theme).filter(ProductLego.theme=="Marvel"))
+    query=session.execute(sqlalchemy.select(ProductLego.productId,  ProductLego.product_name, ProductLego.link_lego, ProductLego.theme).filter(ProductLego.theme=="LEGO Super Mario").limit(6))
 
-    original_message="Une sélection de 6 jouets LEGO Marvel pour fêter la sortie de Black Panther: Wakanda Forever !\nDéroulez le thread pour continuer\n👇👇👇"
+    original_message="Une sélection de 6 jouets LEGO SUper Mario disonibles dans la boutique LEGO\nDéroulez le thread pour continuer\n👇👇👇"
     product_message="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique LEGO pour {price}€ \nProfitez-en maintenant\n{trackedl}"
 
     original_status=api.update_status(original_message)
 
-    for p in marvel: 
+    for p in query: 
         res=Lego().single_page_datas_extraction(p.link_lego)
         trackedl=Webgain("1639880", "268085").create_aff_link(p.link_lego)
         new_product=api.update_status(status=product_message.format(theme=p.theme, name=p.product_name, nb_pieces=res["nb_pieces"], price=res["price"], trackedl=trackedl), in_reply_to_status_id=original_status.id, )
@@ -94,6 +94,15 @@ def post_product_from_link(msg, link):
     to_post=msg.format(trackedl=trackedl)
 
     api.update_status(to_post)
+
+def post_minifig_day():
+
+    api=set_api()
+
+    minifig=session.execute(sqlalchemy.select(Minifigs.minifig_name, Minifigs.productlego_set).order_by(func.random()).limit(1)).first()
+
+    to_post_msg="🗓️Tous les jours, découvrez une minifigurine LEGO🗓️\nAjd, c'est Abraham Lincoln, de la Grande Aventure Lego, sorti en 2014.\nIl est présent dans les sets: 71004, 71023A\nA demain pour une nouvelle minifigurine!"
+
 
 #Amazon().amazon_price_from_html("https://www.amazon.fr/stores/page/2686D5FE-3511-4FBB-A7CD-D3ACC396BD11?channel=hp-r1-rs-deals-q4")
 
@@ -127,10 +136,10 @@ session=Lego().create_session()
 #session.add(new)
 #session.commit()
 #print(Minifigs.__tablename__)
-#new=Minifigs(minifig_name="Nick Quasi-Sans-Tête", minifig_url="https://lego.fandom.com/fr/wiki/Nick_Quasi-Sans-T%C3%AAte", productlego=[76389])
-#session.add(new)
-#session.commit()
-#for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url)
+new=Minifigs(minifig_name="Nick Quasi-Sans-Tête", minifig_url="https://lego.fandom.com/fr/wiki/Nick_Quasi-Sans-T%C3%AAte", productlego_set=76389)
+session.add(new)
+session.commit()
+for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url, type(p.productlego_set))
 
 #show_all_datas()
 
@@ -139,4 +148,5 @@ session=Lego().create_session()
 #post_random_product()
 
 
-session.execute("ALTER TABLE minifigs ADD CONSTRAINT FOREIGN KEY (productlego_set) REFERENCES productLego(productId);")
+#session.execute("ALTER TABLE minifigs ADD CONSTRAINT FOREIGN KEY (productlego_set) REFERENCES productLego(productId);")
+
