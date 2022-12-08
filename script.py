@@ -49,6 +49,20 @@ def up_db():
 
 #for p in random_product: print(p)
 
+def post_thread_from_query(query, msg):
+    api=set_api()
+
+    product_message="Le jouet {theme} {name} avec {nb_pieces} pièces est disponible dans la boutique Amazon pour {price}€ \nProfitez-en maintenant\n{trackedl}"
+
+    original_status=api.update_status(msg)
+
+    for p in query: 
+        link=p.link_amazon
+        print(link)
+        res=Amazon().single_page_datas_extraction(link)
+        trackedl=AmazonPartner("legolinks-21").create_aff_link(link)
+        new_product=api.update_status(status=product_message.format(theme=p.theme, name=p.product_name, nb_pieces=p.nb_pieces, price=res["price"], trackedl=trackedl), in_reply_to_status_id=original_status.id, )
+
 def post_random_product():
     #Set the api to create status
     api=set_api()
@@ -99,7 +113,10 @@ def post_minifig_day():
 
     api=set_api()
 
-    minifig=session.execute(sqlalchemy.select(Minifigs.minifig_name, Minifigs.productlego_set).order_by(func.random()).limit(1)).first()
+    minifig=session.execute(sqlalchemy.select(Minifigs.minifig_name, Minifigs.minifig_url, Minifigs.productlego_set).order_by(func.random()).limit(1)).first()
+    name=minifig.name
+    set=minifig.productlego_set
+
 
     to_post_msg="🗓️Tous les jours, découvrez une minifigurine LEGO🗓️\nAjd, c'est Abraham Lincoln, de la Grande Aventure Lego, sorti en 2014.\nIl est présent dans les sets: 71004, 71023A\nA demain pour une nouvelle minifigurine!"
 
@@ -136,9 +153,9 @@ session=Lego().create_session()
 #session.add(new)
 #session.commit()
 #print(Minifigs.__tablename__)
-new=Minifigs(minifig_name="Nick Quasi-Sans-Tête", minifig_url="https://lego.fandom.com/fr/wiki/Nick_Quasi-Sans-T%C3%AAte", productlego_set=76389)
-session.add(new)
-session.commit()
+#new=Minifigs(minifig_name="Nick Quasi-Sans-Tête", minifig_url="https://lego.fandom.com/fr/wiki/Nick_Quasi-Sans-T%C3%AAte", productlego_set=76389)
+#session.add(new)
+#session.commit()
 for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url, type(p.productlego_set))
 
 #show_all_datas()
@@ -150,3 +167,8 @@ for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_
 
 #session.execute("ALTER TABLE minifigs ADD CONSTRAINT FOREIGN KEY (productlego_set) REFERENCES productLego(productId);")
 
+query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.product_name, ProductLego.theme, ProductLego.link_amazon, ProductLego.nb_pieces).filter(ProductLego.link_amazon!=0).limit(6))
+msg="Découvrez une sélection de produits LEGO disponible chez Amazon !\nDéroulez le thread pour continuer👇👇👇"
+
+#for p in query: print (p.link_amazon)
+post_thread_from_query(query, msg)
