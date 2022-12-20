@@ -8,9 +8,12 @@ class ProductLego (models.Model):
     productid = IntegerField (verbose_name="Id du produit", primary_key=True, null=False)
     name =  CharField (max_length=100, verbose_name="Nom du produit", null=True)
     link_lego = CharField(verbose_name="Lien de la boutique Lego", max_length=255, null=True)
-    nb_pieces = IntegerField ()
+    nb_pieces = IntegerField (null=True)
     image = CharField(max_length=255, null=True)
     theme = CharField (verbose_name="Thème", max_length=50,null=True)
+    
+    def __str__(self):
+        return self.name
 
 class AmazonLego (models.Model):
 
