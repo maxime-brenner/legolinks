@@ -6,9 +6,10 @@ from regie import Webgain, AmazonPartner
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy
 from sqlalchemy.sql.expression import func
-import requests
-import tweepy
+#import requests
+#import tweepy
 from twitterBot import set_api
+import json, collections
 
 def show_all_datas():
     Session=sessionmaker(bind=connect_to_db()["engine"])
@@ -149,26 +150,19 @@ def add_lego():
             pass
 
 session=Lego().create_session()
-#new=Minifigs(minifig_name="Abraham Lincoln", minifig_url="https://lego.fandom.com/fr/wiki/Abraham_Lincoln")
-#session.add(new)
-#session.commit()
-#print(Minifigs.__tablename__)
-#new=Minifigs(minifig_name="Nick Quasi-Sans-Tête", minifig_url="https://lego.fandom.com/fr/wiki/Nick_Quasi-Sans-T%C3%AAte", productlego_set=76389)
-#session.add(new)
-#session.commit()
-for p in session.query(Minifigs): print (p.minifigId, p.minifig_name, p.minifig_url, type(p.productlego_set))
+object_list=[]
+q=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.link_lego, ProductLego.link_amazon, ProductLego.product_name, ProductLego.theme, ProductLego.nb_pieces))
+for p in q: 
+    d=collections.OrderedDict()
+    d["productid"]=p.productId
+    d["name"]=p.product_name
+    d["link_lego"]=p.link_lego
+    d["link_amazon"]=p.link_amazon
+    d["theme"]=p.theme
+    d["nb_pieces"]=p.nb_pieces
+    object_list.append(d)
+    
+j=json.dumps(object_list)
 
-#show_all_datas()
-
-#add_column(connect_to_db()["engine"], "minifigs", sqlalchemy.Column("productlego_set", sqlalchemy.ForeignKey(ProductLego.productId), primary_key=True))
-
-#post_random_product()
-
-
-#session.execute("ALTER TABLE minifigs ADD CONSTRAINT FOREIGN KEY (productlego_set) REFERENCES productLego(productId);")
-
-query=session.execute(sqlalchemy.select(ProductLego.productId, ProductLego.product_name, ProductLego.theme, ProductLego.link_amazon, ProductLego.nb_pieces).filter(ProductLego.link_amazon!=0).limit(6))
-msg="Découvrez une sélection de produits LEGO disponible chez Amazon !\nDéroulez le thread pour continuer👇👇👇"
-
-#for p in query: print (p.link_amazon)
-post_thread_from_query(query, msg)
+with open ('lego_db.js', 'w') as f:
+    f.write(j)

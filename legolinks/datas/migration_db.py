@@ -47,6 +47,6 @@ with open ('lego_db.js', 'w') as f:
     
     print(p.productId, p.product_name, p.theme, p.link_lego, p.link_amazon)
 
-ProductLego(productid=i['productid'], name=i['name'], link_lego=i['link_lego'], nb_pieces=i['nb_pieces'], theme=i['theme'])
+#ProductLego(productid=i['productid'], name=i['name'], link_lego=i['link_lego'], nb_pieces=i['nb_pieces'], theme=i['theme'])
 
 
