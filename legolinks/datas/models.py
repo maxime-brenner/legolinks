@@ -18,5 +18,5 @@ class ProductLego (models.Model):
 class AmazonLego (models.Model):
 
     productid = ForeignKey(("datas.ProductLego"), on_delete=models.CASCADE)
-    lien = CharField(max_length=255, verbose_name="Lien")
-    prix = models.FloatField(verbose_name="Dernier prix")
+    lien = CharField(max_length=255, verbose_name="Lien", null=True)
+    prix = models.FloatField(verbose_name="Dernier prix", null=True)
