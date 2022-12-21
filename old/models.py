@@ -1,6 +1,6 @@
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, MetaData, schema
-from dbUtilities import connect_to_db
+
 
 Base=declarative_base()
 metadata=MetaData()

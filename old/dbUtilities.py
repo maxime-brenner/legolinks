@@ -1,5 +1,5 @@
 import sqlalchemy, re
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy import Column, Integer, String, ForeignKey
 
 #Connect to sqlite db
@@ -10,7 +10,12 @@ def connect_to_db():
 
 	return {"engine":engine, "connection":connection, "metadata":metadata}
 
-
+def create_session(engine):
+	Session=sessionmaker(bind=engine)
+	session=Session() 
+ 
+	return session
+    
 
 #Query to create the db
 def create_table():
