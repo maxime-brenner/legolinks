@@ -1,8 +1,7 @@
 import requests, re
 from bs4 import BeautifulSoup
-from sqlalchemy import create_engine, MetaData, insert
-from sqlalchemy.orm import sessionmaker
-from models import ProductLego
+from datas.models import *
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from time import sleep
@@ -26,20 +25,8 @@ class Shop():
         print(req.status_code, req.url)
 
         return soup
-    
-    #Etablish conncetion to database
-    def connect_to_db(self):
-        engine=create_engine('sqlite:///legoDB.db')
-        connection=engine.connect()
-        metadata=MetaData()
 
-        return {"engine":engine, "connection":connection, "metadata":metadata}
 
-    def create_session(self):
-        Session=sessionmaker(bind=self.connect_to_db()["engine"])
-        session=Session()
-
-        return session
 
 class Lego(Shop):
     def __init__(self):
@@ -49,10 +36,6 @@ class Lego(Shop):
     #Get every products on a multi-products page and check if it's in the database.
     #Otherwise, add the product in the database
     def multiple_product_extraction(self, url):
-
-        #Initiate session
-        session=self.create_session()
-
 
         #Prepare the page  
         soup=self.parser(url)
@@ -78,6 +61,7 @@ class Lego(Shop):
                         session.commit()
                         
                         print ("{0} succesfully add to the db".format(productId,))
+
                     except Exception as e:
                         print("Impossible to add product")
                         print(e)
@@ -123,6 +107,8 @@ class Lego(Shop):
             reduction=0
 
         return {"name": name, "price": price, "sale": sale, "reduction":reduction,"nb_pieces": int(nb_pieces), "theme":theme}
+
+    
 
 class Amazon(Shop):
 
