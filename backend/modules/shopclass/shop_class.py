@@ -1,8 +1,6 @@
 import requests, re
 from bs4 import BeautifulSoup
-from sqlalchemy import create_engine, MetaData, insert
-from sqlalchemy.orm import sessionmaker
-from models import ProductLego
+from datas.models import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from time import sleep
@@ -26,20 +24,8 @@ class Shop():
         print(req.status_code, req.url)
 
         return soup
-    
-    #Etablish conncetion to database
-    def connect_to_db(self):
-        engine=create_engine('sqlite:///legoDB.db')
-        connection=engine.connect()
-        metadata=MetaData()
 
-        return {"engine":engine, "connection":connection, "metadata":metadata}
 
-    def create_session(self):
-        Session=sessionmaker(bind=self.connect_to_db()["engine"])
-        session=Session()
-
-        return session
 
 class Lego(Shop):
     def __init__(self):
@@ -50,10 +36,6 @@ class Lego(Shop):
     #Otherwise, add the product in the database
     def multiple_product_extraction(self, url):
 
-        #Initiate session
-        session=self.create_session()
-
-
         #Prepare the page  
         soup=self.parser(url)
 
@@ -63,11 +45,11 @@ class Lego(Shop):
             try:
                 link=self.domain.format(p.find("a", {"data-test":"product-leaf-title-link"}, href=True)["href"])
                 productId=int(re.search("([\d]{0,})$", link).group(0))
-                name=p.find("span", {"class":"Markup__StyledMarkup-sc-nc8x20-0 dbPAWk"}).getText()
+                name=p.find("span", {"class":"Markup__StyledMarkup-nc8x20-0 epIXnJ"}).getText()
                 print(link, productId, name)
 
                 try:
-                    new_product=session.query(ProductLego.productId).filter(ProductLego.productId == productId).scalar()
+                    new_product=ProductLego.objects.filter(productId=productId)
                     new_product is not None 
                     res=self.single_page_datas_extraction(link)
                     print("Add new product {0} in db".format(productId,) )
@@ -78,6 +60,7 @@ class Lego(Shop):
                         session.commit()
                         
                         print ("{0} succesfully add to the db".format(productId,))
+
                     except Exception as e:
                         print("Impossible to add product")
                         print(e)
@@ -106,11 +89,12 @@ class Lego(Shop):
 
         #Prepare the page  
         soup=self.parser(url)
+        
 
         #Extract datas
+        productid = int(re.search("([\d]{0,})$", url).group(0))
         price=float(soup.find('span', {"data-test":"product-price"}).getText().replace('Price','').replace(',','.').replace('€',''))
-        
-        name=soup.find("h1", {"data-test":"product-overview-name"}).find('span', {"class":"Markup__StyledMarkup-sc-nc8x20-0 dbPAWk"}).getText()
+        name=soup.find("h1", {"data-test":"product-overview-name"}).getText()
         nb_pieces=soup.find("div", {"data-test":"pieces-value"}).getText()
         theme=soup.find("div", {"class":"ProductOverviewstyles__Container-sc-1a1az6h-2 dkHUOp"}).find("span", {"itemprop":"brand"}).getText()
 
@@ -122,7 +106,18 @@ class Lego(Shop):
             sale=0
             reduction=0
 
-        return {"name": name, "price": price, "sale": sale, "reduction":reduction,"nb_pieces": int(nb_pieces), "theme":theme}
+        return {"productid": productid, "name": name, "nb_pieces": int(nb_pieces), "theme":theme, "link_lego":url} #"price": price, "sale": sale, "reduction":reduction,}
+
+    def insert_single_product(self, url):
+        data = self.single_page_datas_extraction(url)
+        query = ProductLego(**data)
+        query.save()
+
+        return query
+
+
+
+    
 
 class Amazon(Shop):
 
