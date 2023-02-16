@@ -49,16 +49,13 @@ class Lego(Shop):
                 print(link, productId, name)
 
                 try:
-                    new_product=ProductLego.objects.filter(productId=productId)
+                    new_product=ProductLego.objects.filter(productid=productId)
                     new_product is not None 
                     res=self.single_page_datas_extraction(link)
                     print("Add new product {0} in db".format(productId,) )
 
                     try:
-                        
-                        session.execute(insert(ProductLego).values({ProductLego.productId:productId, ProductLego.link_lego:link, ProductLego.product_name:name, ProductLego.theme:res["theme"], ProductLego.nb_pieces:res["nb_pieces"]}))
-                        session.commit()
-                        
+                        self.insert_single_product(link)
                         print ("{0} succesfully add to the db".format(productId,))
 
                     except Exception as e:
@@ -80,8 +77,6 @@ class Lego(Shop):
             self.multiple_product_extraction(self.domain.format(next_link))
         except:
             pass
-
-        session.close()
 
 
     #Extract datas from a product page 
@@ -106,18 +101,16 @@ class Lego(Shop):
             sale=0
             reduction=0
 
-        return {"productid": productid, "name": name, "nb_pieces": int(nb_pieces), "theme":theme, "link_lego":url} #"price": price, "sale": sale, "reduction":reduction,}
+        return {"productid": productid, "name": name, "nb_pieces": int(nb_pieces), "theme":theme, "link_lego":url, "price": price, "sale": sale, "reduction":reduction,}
 
     def insert_single_product(self, url):
         data = self.single_page_datas_extraction(url)
-        query = ProductLego(**data)
+        columns=[f.name for f in ProductLego._meta.get_fields()]
+        validated_datas={key:value for (key,value) in data.items() if key in columns}
+        query = ProductLego(**validated_datas)
         query.save()
 
-        return query
-
-
-
-    
+        return query   
 
 class Amazon(Shop):
 
@@ -178,6 +171,7 @@ class Amazon(Shop):
 
                     try:
                         to_check.link_amazon=link
+
                         session.commit()
                     except Exception as e:
                         print("Erreur lors de l'ajout de l'article {id}: {e}".format(id=id, e=e,))
